@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Work Management System</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f9;
+        }
+        .container {
+            max-width: 900px;
+            margin: 30px auto;
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            text-align: center;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            font-weight: bold;
+        }
+        input, select, button {
+            width: 100%;
+            padding: 10px;
+            margin-top: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .user-list, .data-list {
+            margin-top: 30px;
+        }
+        .user-item, .data-item {
+            border: 1px solid #ddd;
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Work Management System</h1>
+
+        <!-- Owner Section -->
+        <div id="ownerSection">
+            <h2>Create User</h2>
+            <form id="createUserForm">
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" required>
+                </div>
+                <button type="submit">Add User</button>
+            </form>
+
+            <h2>Users</h2>
+            <div class="user-list" id="userList"></div>
+        </div>
+
+        <!-- User Section -->
+        <div id="userSection">
+            <h2>Add Work Details</h2>
+            <form id="addWorkForm">
+                <div class="form-group">
+                    <label for="msisdn">MSISDN</label>
+                    <input type="text" id="msisdn" required>
+                </div>
+                <div class="form-group">
+                    <label for="workDetails">Work Details</label>
+                    <select id="workDetails">
+                        <option value="New Route">New Route</option>
+                        <option value="Maintenance Case">Maintenance Case</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="gamRequestDate">GAM Permission Request Date</label>
+                    <input type="date" id="gamRequestDate" required>
+                </div>
+                <div class="form-group">
+                    <label for="expectedDate">Expected Date to Get Permission</label>
+                    <input type="date" id="expectedDate" required>
+                </div>
+                <button type="submit">Add Work</button>
+            </form>
+
+            <h2>Work Details</h2>
+            <div>
+                <label for="filterUser">Filter by User</label>
+                <select id="filterUser"></select>
+            </div>
+            <div>
+                <label for="filterWorkDetails">Filter by Work Details</label>
+                <select id="filterWorkDetails">
+                    <option value="All">All</option>
+                    <option value="New Route">New Route</option>
+                    <option value="Maintenance Case">Maintenance Case</option>
+                </select>
+            </div>
+            <div class="data-list" id="dataList"></div>
+        </div>
+    </div>
+
+    <script>
+        const users = [];
+        const workDetails = [];
+        const notifications = [];
+
+        // Elements
+        const userList = document.getElementById('userList');
+        const filterUser = document.getElementById('filterUser');
+        const dataList = document.getElementById('dataList');
+
+        // Add User
+        document.getElementById('createUserForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const username = document.getElementById('username').value.trim();
+            if (username) {
+                users.push(username);
+                document.getElementById('username').value = '';
+                updateUserList();
+            }
+        });
+
+        // Add Work Details
+        document.getElementById('addWorkForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const msisdn = document.getElementById('msisdn').value.trim();
+            const workDetail = document.getElementById('workDetails').value;
+            const gamRequestDate = document.getElementById('gamRequestDate').value;
+            const expectedDate = document.getElementById('expectedDate').value;
+
+            if (msisdn && gamRequestDate && expectedDate) {
+                workDetails.push({
+                    msisdn,
+                    workDetail,
+                    gamRequestDate,
+                    expectedDate,
+                    user: "Default User"
+                });
+                document.getElementById('addWorkForm').reset();
+                updateWorkList();
+            }
+        });
+
+        // Update User List
+        function updateUserList() {
+            userList.innerHTML = '';
+            filterUser.innerHTML = '<option value="All">All</option>';
+            users.forEach((user, index) => {
+                const userItem = document.createElement('div');
+                userItem.classList.add('user-item');
+                userItem.textContent = user;
+                userList.appendChild(userItem);
+
+                const option = document.createElement('option');
+                option.value = user;
+                option.textContent = user;
+                filterUser.appendChild(option);
+            });
+        }
+
+        // Update Work List
+        function updateWorkList() {
+            const selectedUser = filterUser.value;
+            const selectedWorkDetail = filterWorkDetails.value;
+
+            dataList.innerHTML = '';
+            workDetails
+                .filter((detail) => {
+                    const matchesUser = selectedUser === 'All' || detail.user === selectedUser;
+                    const matchesWorkDetail = selectedWorkDetail === 'All' || detail.workDetail === selectedWorkDetail;
+                    return matchesUser && matchesWorkDetail;
+                })
+                .forEach((detail) => {
+                    const dataItem = document.createElement('div');
+                    dataItem.classList.add('data-item');
+                    dataItem.innerHTML = `
+                        <p><strong>MSISDN:</strong> ${detail.msisdn}</p>
+                        <p><strong>Work Details:</strong> ${detail.workDetail}</p>
+                        <p><strong>GAM Permission Request Date:</strong> ${detail.gamRequestDate}</p>
+                        <p><strong>Expected Date:</strong> ${detail.expectedDate}</p>
+                    `;
+                    dataList.appendChild(dataItem);
+                });
+        }
+
+        // Filter Work List
+        filterUser.addEventListener('change', updateWorkList);
+        filterWorkDetails.addEventListener('change', updateWorkList);
+    </script>
+</body>
+</html>
